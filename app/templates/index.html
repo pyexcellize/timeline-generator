@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-seedling text-success me-2"></i>Rows over time</h1>
+        <p class="lead">Explore row changes over time.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-9">
+        <div class="timeline-container">
+            <div class="timeline" id="timeline">
+                <!-- Timeline items will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-search me-2"></i>Row Lookup</h6>
+            </div>
+            <div class="card-body">
+                <form id="row-form">
+                    <div class="mb-3">
+                        <label for="row-id-input" class="form-label">Row ID:</label>
+                        <input type="text" class="form-control" id="row-id-input" placeholder="Enter row ID">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-search me-2"></i>Load Row
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button id="loadTimelineData" class="btn btn-outline-success w-100">
+                <i class="fas fa-sync-alt me-2"></i>Refresh Data
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Timeline item template -->
+{% include 'components/timeline_templates.html' %}
+{% endblock %}
