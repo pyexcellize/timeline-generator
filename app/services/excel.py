@@ -2,9 +2,7 @@ import os
 import pandas as pd
 from typing import List, Dict, Any, Union
 
-PRIMARY_KEYS = ["PRIMARY_KEY", "PKEY"]
-DATE_COLUMNS = ["DATE", "DATE_TIME"]
-DATA_DIRECTORY = "data/"  # Root data directory for Excel files
+from app.config.config import Config
 
 
 class Excel:
@@ -21,11 +19,11 @@ class Excel:
     def find_all_excel_files() -> List[str]:
         excel_files = []
         # Check if the data directory exists
-        if not os.path.exists(DATA_DIRECTORY):
+        if not os.path.exists(Config.DATA_DIRECTORY):
             return excel_files
 
         # Walk through the directory and find all Excel files
-        for root, _, files in os.walk(DATA_DIRECTORY):
+        for root, _, files in os.walk(Config.DATA_DIRECTORY):
             for file in files:
                 if file.endswith(('.xlsx', '.xls')):
                     excel_files.append(os.path.join(root, file))
@@ -53,7 +51,7 @@ class Excel:
 
                         # Find which primary key is in the dataframe
                         found_primary_key = None
-                        for pk in PRIMARY_KEYS:
+                        for pk in Config.PRIMARY_KEYS:
                             if pk in df.columns:
                                 found_primary_key = pk
                                 break
