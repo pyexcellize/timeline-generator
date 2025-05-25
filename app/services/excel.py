@@ -39,7 +39,23 @@ class Excel:
                 for sheet_name in excel_file.sheet_names:
                     try:
                         sheet_start_time = time.time()
-                        sheet_df = pd.read_excel(excel_file, sheet_name=sheet_name, index_col=0)
+                        # First load without specifying index to check columns
+                        temp_df = pd.read_excel(excel_file, sheet_name=sheet_name)
+                        
+                        # Find if any PRIMARY_KEY exists in the columns
+                        index_col = None
+                        for pk in Config.PRIMARY_KEYS:
+                            if pk in temp_df.columns:
+                                index_col = pk
+                                break
+                        
+                        # Reload with the correct index column
+                        if index_col:
+                            sheet_df = pd.read_excel(excel_file, sheet_name=sheet_name, index_col=index_col)
+                        else:
+                            # Fall back to first column as index if no primary key found
+                            sheet_df = pd.read_excel(excel_file, sheet_name=sheet_name, index_col=0)
+                            
                         cls._excel_cache[file_path]['sheets'][sheet_name] = sheet_df
                         sheet_load_time = time.time() - sheet_start_time
                         print(f"Sheet '{sheet_name}' in '{file_name}' loaded in {sheet_load_time:.3f} seconds")
