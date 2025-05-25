@@ -102,6 +102,10 @@
     font-weight: 500;
 }
 
+.table-responsive {
+    max-height: 500px;
+}
+
 /* Animation */
 @keyframes fadeInUp {
     to {
