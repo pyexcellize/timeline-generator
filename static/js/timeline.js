@@ -33,7 +33,7 @@ class SimpleTimelineItem {
             date.textContent = this.formatDate(this.data.date);
         }
         
-        rowId.textContent = this.data.row_id;
+        rowId.textContent = this.data.row_pk;
         description.textContent = this.data.description;
 
         // Populate table row
@@ -97,8 +97,8 @@ class SimpleTimelineManager {
     loadData(timelineData) {
         this.items = [];
 
-        if (timelineData && timelineData.events && Array.isArray(timelineData.events)) {
-            timelineData.events.forEach(event => {
+        if (timelineData && timelineData.rows && Array.isArray(timelineData.rows)) {
+            timelineData.rows.forEach(event => {
                 this.addItem(event);
             });
         }
@@ -111,23 +111,23 @@ class SimpleTimelineManager {
         this.container.innerHTML = `
             <div class="text-center py-5">
                 <i class="fas fa-rowling fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">No events found</h5>
-                <p class="text-muted">No timeline events available for this row.</p>
+                <h5 class="text-muted">No rows found</h5>
+                <p class="text-muted">No timeline rows available for this row.</p>
             </div>
         `;
     }
 
     updateSummary(data) {
         const currentRow = document.getElementById('current-row');
-        const totalEvents = document.getElementById('total-events');
+        const totalEvents = document.getElementById('total-rows');
         const lastUpdated = document.getElementById('last-updated');
 
         if (data) {
             if (currentRow) {
-                currentRow.textContent = data.row_id || 'Unknown';
+                currentRow.textContent = data.row_pk || 'Unknown';
             }
             if (totalEvents) {
-                totalEvents.textContent = data.events ? data.events.length : 0;
+                totalEvents.textContent = data.rows ? data.rows.length : 0;
             }
             if (lastUpdated) {
                 lastUpdated.textContent = new Date().toLocaleDateString();

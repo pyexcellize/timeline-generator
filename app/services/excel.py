@@ -3,19 +3,12 @@ import pandas as pd
 from datetime import datetime
 from typing import List, Dict, Any, Union
 
+from pandas import DataFrame
+
 from app.config.config import Config
 
 
 class Excel:
-
-    @staticmethod
-    def get_excel_file_path(file_name: str) -> str:
-        return f"app/excel/{file_name}"
-
-    @staticmethod
-    def get_excel_file_name(file_name: str) -> str:
-        return file_name
-
     @staticmethod
     def find_all_excel_files() -> List[str]:
         excel_files = []
@@ -32,11 +25,10 @@ class Excel:
         return excel_files
 
     @staticmethod
-    def get_rows_by_row_id(row_id: str) -> List[Dict[str, Any]]:
-        results = []
-        excel_files = Excel.find_all_excel_files()
+    def get_rows_by_row_pk(row_pk: str) -> Any:
+        output = []
 
-        for file_path in excel_files:
+        for file_path in Excel.find_all_excel_files():
             try:
                 # Get the Excel file with all sheets
                 excel_file = pd.ExcelFile(file_path)
@@ -48,41 +40,42 @@ class Excel:
                 for sheet_name in excel_file.sheet_names:
                     try:
                         # Read the sheet into a DataFrame
-                        df = pd.read_excel(excel_file, sheet_name=sheet_name)
+                        sheet_df = pd.read_excel(excel_file, sheet_name=sheet_name)
 
                         # Find which primary key is in the dataframe
                         found_primary_key = None
                         for pk in Config.PRIMARY_KEYS:
-                            if pk in df.columns:
+                            if pk in sheet_df.columns:
                                 found_primary_key = pk
                                 break
 
-                        # If a primary key is found, search for the row_id
+                        found_date_key = None
+                        for date_key in Config.DATE_COLUMNS:
+                            if date_key in sheet_df.columns:
+                                found_date_key = date_key
+                                break
+
+                        # If a primary key is found, search for the row_pk
                         if found_primary_key:
-                            matching_rows = df[df[found_primary_key] == row_id]
+                            matches_in_sheet = []
+                            matches_in_sheet_df = sheet_df[sheet_df[found_primary_key] == row_pk]
 
                             # If there are matching rows, add them to results
-                            if not matching_rows.empty:
-                                for _, row in matching_rows.iterrows():
-                                    # Convert row to dictionary
-                                    row_dict = row.to_dict()
-                                    
-                                    # Extract dates from date columns if defined in Config
-                                    extracted_dates = {}
-                                    if hasattr(Config, 'DATE_COLUMNS') and Config.DATE_COLUMNS:
-                                        for date_col in Config.DATE_COLUMNS:
-                                            if date_col in row_dict:
-                                                date_value = row_dict[date_col]
-                                                extracted_dates[date_col] = date_value
+                            if not matches_in_sheet_df.empty:
+                                for _, row in matches_in_sheet_df.iterrows():
+                                    matches_in_sheet.append({
+                                        'metadata': {
+                                            'parsed_date': 'None'
+                                        },
+                                        'row': row.astype(str).to_dict(),
+                                    })
 
-                                    # Add metadata and extracted dates to result
-                                    result = {
-                                        "file_name": file_name,
-                                        "sheet_name": sheet_name,
-                                        "data": row_dict,
-                                        "extracted_dates": extracted_dates
-                                    }
-                                    results.append(result)
+                                output.append({
+                                    'matches': matches_in_sheet,
+                                    'file_name': file_name,
+                                    'sheet_name': sheet_name,
+                                })
+
                     except Exception as e:
                         # Log error but continue processing other sheets
                         print(f"Error processing sheet {sheet_name} in file {file_path}: {str(e)}")
@@ -93,4 +86,4 @@ class Excel:
                 print(f"Error processing file {file_path}: {str(e)}")
                 continue
 
-        return results
+        return output

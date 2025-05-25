@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const rowId = rowIdInput.value.trim();
             
             if (rowId) {
-                // Redirect to the same page with row_id parameter
-                window.location.href = `${window.location.pathname}?row_id=${encodeURIComponent(rowId)}`;
+                // Redirect to the same page with row_pk parameter
+                window.location.href = `${window.location.pathname}?row_pk=${encodeURIComponent(rowId)}`;
             }
         });
     }
@@ -66,7 +66,7 @@ async function setupRowAutocomplete() {
                 
                 // Filter rowes based on input
                 const matchingRowes = rowes.filter(row => 
-                    row.row_id.toLowerCase().includes(inputValue)
+                    row.row_pk.toLowerCase().includes(inputValue)
                 );
                 
                 if (matchingRowes.length > 0) {
@@ -77,7 +77,7 @@ async function setupRowAutocomplete() {
                         item.className = 'autocomplete-item';
                         
                         // Highlight matching part
-                        const rowId = row.row_id;
+                        const rowId = row.row_pk;
                         const matchIndex = rowId.toLowerCase().indexOf(inputValue);
                         
                         item.innerHTML = `
@@ -92,7 +92,7 @@ async function setupRowAutocomplete() {
                         `;
                         
                         item.addEventListener('click', function() {
-                            rowInput.value = row.row_id;
+                            rowInput.value = row.row_pk;
                             autocompleteContainer.style.display = 'none';
                         });
                         
@@ -123,7 +123,7 @@ async function loadTimelineFromAPI(timelineManager) {
         
         // Get row ID from URL parameter or use default
         const urlParams = new URLSearchParams(window.location.search);
-        const rowId = urlParams.get('row_id') || 'ROW-001';
+        const rowId = urlParams.get('row_pk') || 'ROW-001';
         
         // Populate the input field with the current row ID
         const rowIdInput = document.getElementById('row-id-input');
