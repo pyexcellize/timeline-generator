@@ -135,6 +135,7 @@ class Excel:
             
             # Try various date formats in order
             formats_to_try = [
+                '%Y%m%d',           # 20230115
                 '%Y-%m-%d',           # 2023-01-15
                 '%d/%m/%Y',           # 15/01/2023
                 '%m/%d/%Y',           # 01/15/2023
