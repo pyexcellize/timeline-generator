@@ -139,6 +139,10 @@ async function loadTimelineFromAPI(timelineManager) {
         }
 
         const timelineData = await response.json();
+        
+        // Add row_pk to the data for reference
+        timelineData.row_pk = rowId;
+        
         timelineManager.loadData(timelineData);
 
         showNotification('Timeline data loaded successfully', 'success');

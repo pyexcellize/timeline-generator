@@ -2,8 +2,10 @@
  * Simple Timeline Item Class - DEFINE THIS FIRST
  */
 class SimpleTimelineItem {
-    constructor(data) {
-        this.data = data;
+    constructor(date, fileData, rowPk) {
+        this.date = date;
+        this.fileData = fileData;
+        this.rowPk = rowPk;
         this.element = null;
     }
 
@@ -22,33 +24,103 @@ class SimpleTimelineItem {
         const dataRow = this.element.querySelector('.data-row');
 
         // Set basic info
-        item.setAttribute('data-item-type', this.data.event_type || 'default');
+        item.setAttribute('data-item-type', 'default');
+        date.textContent = this.formatDate(this.date);
+        rowId.textContent = this.rowPk;
         
-        // Use extracted date from backend if available
-        if (this.data.extracted_dates && Object.keys(this.data.extracted_dates).length > 0) {
-            // Use the first extracted date (or we could prioritize specific date columns)
-            const firstDateKey = Object.keys(this.data.extracted_dates)[0];
-            date.textContent = this.data.extracted_dates[firstDateKey];
-        } else {
-            date.textContent = this.formatDate(this.data.date);
-        }
+        // Create description based on file data
+        const fileCount = Object.keys(this.fileData).length;
+        const totalRowsCount = this.countTotalRows(this.fileData);
+        description.textContent = `Found in ${fileCount} file(s) with ${totalRowsCount} occurrence(s)`;
         
-        rowId.textContent = this.data.row_pk;
-        description.textContent = this.data.description;
-
-        // Populate table row
-        this.populateTableRow(dataRow, this.data.table_data);
+        // Replace table with file/sheet data
+        this.populateFileData(this.element.querySelector('.data-table-container'), this.fileData);
     }
 
-    populateTableRow(row, tableData) {
-        row.innerHTML = ''; // Clear existing cells
+    countTotalRows(fileData) {
+        let count = 0;
+        for (const fileName in fileData) {
+            const sheetData = fileData[fileName];
+            for (const sheetName in sheetData) {
+                count += sheetData[sheetName].length;
+            }
+        }
+        return count;
+    }
 
-        if (tableData && Array.isArray(tableData)) {
-            tableData.forEach(cellValue => {
-                const cell = document.createElement('td');
-                cell.textContent = cellValue;
-                row.appendChild(cell);
-            });
+    populateFileData(container, fileData) {
+        container.innerHTML = '';
+        
+        // Create expandable sections for each file
+        for (const fileName in fileData) {
+            const fileCard = document.createElement('div');
+            fileCard.className = 'card mb-2';
+            
+            const fileHeader = document.createElement('div');
+            fileHeader.className = 'card-header d-flex justify-content-between align-items-center';
+            fileHeader.innerHTML = `
+                <h6 class="mb-0">
+                    <i class="fas fa-file-excel me-2 text-success"></i>${fileName}
+                </h6>
+                <span class="badge bg-info">${this.countTotalRows(fileData[fileName])} rows</span>
+            `;
+            
+            const fileContent = document.createElement('div');
+            fileContent.className = 'card-body py-2';
+            
+            // Add sheets from this file
+            for (const sheetName in fileData[fileName]) {
+                const sheetCard = document.createElement('div');
+                sheetCard.className = 'sheet-data mb-2';
+                
+                const sheetHeader = document.createElement('div');
+                sheetHeader.className = 'sheet-header small text-muted';
+                sheetHeader.innerHTML = `<i class="fas fa-table me-1"></i>${sheetName}`;
+                
+                const sheetTable = document.createElement('table');
+                sheetTable.className = 'table table-sm table-bordered';
+                
+                // Create table headers from the first row's keys
+                const firstRow = fileData[fileName][sheetName][0];
+                const headerRow = document.createElement('tr');
+                headerRow.className = 'table-light';
+                
+                // Only use actual data columns (skip our added metadata columns)
+                const columns = Object.keys(firstRow).filter(key => !key.startsWith('00_'));
+                
+                columns.forEach(column => {
+                    const th = document.createElement('th');
+                    th.textContent = column;
+                    th.className = 'small';
+                    headerRow.appendChild(th);
+                });
+                
+                const thead = document.createElement('thead');
+                thead.appendChild(headerRow);
+                sheetTable.appendChild(thead);
+                
+                // Add data rows
+                const tbody = document.createElement('tbody');
+                fileData[fileName][sheetName].forEach(row => {
+                    const tr = document.createElement('tr');
+                    columns.forEach(column => {
+                        const td = document.createElement('td');
+                        td.textContent = row[column] || '';
+                        td.className = 'small';
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                sheetTable.appendChild(tbody);
+                
+                sheetCard.appendChild(sheetHeader);
+                sheetCard.appendChild(sheetTable);
+                fileContent.appendChild(sheetCard);
+            }
+            
+            fileCard.appendChild(fileHeader);
+            fileCard.appendChild(fileContent);
+            container.appendChild(fileCard);
         }
     }
 
@@ -70,8 +142,8 @@ class SimpleTimelineManager {
         this.items = [];
     }
 
-    addItem(data) {
-        const item = new SimpleTimelineItem(data); // Now this class is defined
+    addItem(date, fileData, rowPk) {
+        const item = new SimpleTimelineItem(date, fileData, rowPk);
         this.items.push(item);
         return item;
     }
@@ -96,10 +168,15 @@ class SimpleTimelineManager {
 
     loadData(timelineData) {
         this.items = [];
+        const rowPk = timelineData.row_pk || 'Unknown';
 
-        if (timelineData && timelineData.rows && Array.isArray(timelineData.rows)) {
-            timelineData.rows.forEach(event => {
-                this.addItem(event);
+        // Process new data structure with matches grouped by date
+        if (timelineData && timelineData.matches) {
+            // Sort dates in descending order (newest first)
+            const sortedDates = Object.keys(timelineData.matches).sort().reverse();
+            
+            sortedDates.forEach(date => {
+                this.addItem(date, timelineData.matches[date], rowPk);
             });
         }
 
@@ -121,17 +198,28 @@ class SimpleTimelineManager {
         const currentRow = document.getElementById('current-row');
         const totalEvents = document.getElementById('total-rows');
         const lastUpdated = document.getElementById('last-updated');
+        
+        const rowPk = data.row_pk || 'Unknown';
+        let totalOccurrences = 0;
+        
+        if (data && data.matches) {
+            Object.values(data.matches).forEach(fileData => {
+                Object.values(fileData).forEach(sheetData => {
+                    Object.values(sheetData).forEach(rows => {
+                        totalOccurrences += rows.length;
+                    });
+                });
+            });
+        }
 
-        if (data) {
-            if (currentRow) {
-                currentRow.textContent = data.row_pk || 'Unknown';
-            }
-            if (totalEvents) {
-                totalEvents.textContent = data.rows ? data.rows.length : 0;
-            }
-            if (lastUpdated) {
-                lastUpdated.textContent = new Date().toLocaleDateString();
-            }
+        if (currentRow) {
+            currentRow.textContent = rowPk;
+        }
+        if (totalEvents) {
+            totalEvents.textContent = totalOccurrences;
+        }
+        if (lastUpdated) {
+            lastUpdated.textContent = new Date().toLocaleDateString();
         }
     }
 }
