@@ -15,6 +15,8 @@ class Excel:
     
     @classmethod
     def initialize_cache(cls):
+        print("Initializing Excel cache...")
+
         """Initialize the Excel file cache"""
         start_time = time.time()
         cls._excel_cache = {}
