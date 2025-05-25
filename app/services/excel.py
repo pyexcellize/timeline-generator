@@ -73,7 +73,7 @@ class Excel:
 
                                             # Parse date in YYYYMMDD format
                                             if len(date_value) == 8:
-                                                date_obj = datetime.strptime(date_value, '%Y%m%d')
+                                                date_obj = datetime.strptime(date_value, Config.DATE_FORMAT)
                                                 parsed_date = date_obj.strftime('%Y-%m-%d')
                                         except Exception as date_error:
                                             print(f"Error parsing date {row[found_date_key]}: {str(date_error)}")

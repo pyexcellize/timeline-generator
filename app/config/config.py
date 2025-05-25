@@ -1,4 +1,5 @@
 class Config:
-    PRIMARY_KEYS = ["PRIMARY_KEY", "PKEY"]
-    DATE_COLUMNS = ["DATE", "DATE_TIME"]
+    PRIMARY_KEYS = ["appearance_id", "PKEY"]
+    DATE_COLUMNS = ["date", "DATE_TIME"]
+    DATE_FORMAT = "%Y-%m-%d"
     DATA_DIRECTORY = "data/"  # Root data directory for Excel files
