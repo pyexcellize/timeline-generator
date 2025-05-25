@@ -90,7 +90,7 @@ async def get_row_timeline(row_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/rows/rowes")
+@router.get("/rows/auto_complete")
 async def get_all_rowes():
     """Get list of all available rowes"""
     try:
@@ -101,41 +101,4 @@ async def get_all_rowes():
         ]
     except Exception as e:
         print(f"Error fetching rowes: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-@router.get("/row/{row_id}/data", response_model=Dict)
-async def get_row_data(row_id: str):
-    """
-    Fetch all rows with a specific row ID from all Excel files in the data directory.
-    
-    Args:
-        row_id: The row ID to search for in the "PRIMARY_KEY" column
-        
-    Returns:
-        All matching rows with file and sheet metadata
-    """
-    if not row_id:
-        raise HTTPException(status_code=400, detail="Row ID is required")
-        
-    try:
-        # Get data from Excel service
-        results = Excel.get_rows_by_row_id(row_id)
-        
-        if not results:
-            return {
-                "row_id": row_id,
-                "count": 0,
-                "data": []
-            }
-            
-        return {
-            "row_id": row_id,
-            "count": len(results),
-            "data": results
-        }
-        
-    except Exception as e:
-        # Log the error
-        print(f"Error fetching row data for {row_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")

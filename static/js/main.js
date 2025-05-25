@@ -44,7 +44,7 @@ async function setupRowAutocomplete() {
     
     // Load available rowes from API
     try {
-        const response = await fetch('/api/v1/rows/rowes');
+        const response = await fetch('/api/v1/rows/auto_complete');
         if (!response.ok) throw new Error('Failed to fetch row data');
         
         const rowes = await response.json();
