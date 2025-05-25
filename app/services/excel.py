@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from datetime import datetime
 from typing import List, Dict, Any, Union
 
 from app.config.config import Config
@@ -63,12 +64,23 @@ class Excel:
                             # If there are matching rows, add them to results
                             if not matching_rows.empty:
                                 for _, row in matching_rows.iterrows():
-                                    # Convert row to dictionary and add metadata
+                                    # Convert row to dictionary
                                     row_dict = row.to_dict()
+                                    
+                                    # Extract dates from date columns if defined in Config
+                                    extracted_dates = {}
+                                    if hasattr(Config, 'DATE_COLUMNS') and Config.DATE_COLUMNS:
+                                        for date_col in Config.DATE_COLUMNS:
+                                            if date_col in row_dict:
+                                                date_value = row_dict[date_col]
+                                                extracted_dates[date_col] = date_value
+
+                                    # Add metadata and extracted dates to result
                                     result = {
                                         "file_name": file_name,
                                         "sheet_name": sheet_name,
-                                        "data": row_dict
+                                        "data": row_dict,
+                                        "extracted_dates": extracted_dates
                                     }
                                     results.append(result)
                     except Exception as e:

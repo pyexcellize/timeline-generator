@@ -23,7 +23,16 @@ class SimpleTimelineItem {
 
         // Set basic info
         item.setAttribute('data-item-type', this.data.event_type || 'default');
-        date.textContent = this.formatDate(this.data.date);
+        
+        // Use extracted date from backend if available
+        if (this.data.extracted_dates && Object.keys(this.data.extracted_dates).length > 0) {
+            // Use the first extracted date (or we could prioritize specific date columns)
+            const firstDateKey = Object.keys(this.data.extracted_dates)[0];
+            date.textContent = this.data.extracted_dates[firstDateKey];
+        } else {
+            date.textContent = this.formatDate(this.data.date);
+        }
+        
         rowId.textContent = this.data.row_id;
         description.textContent = this.data.description;
 
