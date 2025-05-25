@@ -63,18 +63,30 @@ class Excel:
                             # If there are matching rows, add them to results
                             if not matches_in_sheet_df.empty:
                                 for _, row in matches_in_sheet_df.iterrows():
-                                    matches_in_sheet.append({
-                                        'metadata': {
-                                            'parsed_date': 'None'
-                                        },
-                                        'raw': row.astype(str).to_dict(),
-                                    })
+                                    # Parse date if date column exists
+                                    parsed_date = 'None'
+                                    if found_date_key and found_date_key in row:
+                                        try:
+                                            date_value = str(row[found_date_key])
+                                            # Clean the date string (removing any non-numeric characters)
+                                            date_value = ''.join(filter(str.isdigit, date_value))
 
-                                output.append({
-                                    'rows': matches_in_sheet,
-                                    'file_name': file_name,
-                                    'sheet_name': sheet_name,
-                                })
+                                            # Parse date in YYYYMMDD format
+                                            if len(date_value) == 8:
+                                                date_obj = datetime.strptime(date_value, '%Y%m%d')
+                                                parsed_date = date_obj.strftime('%Y-%m-%d')
+                                        except Exception as date_error:
+                                            print(f"Error parsing date {row[found_date_key]}: {str(date_error)}")
+                                            parsed_date = 'Error parsing date'
+
+                                    output.append({
+                                        **{
+                                            '00_parsed_date': parsed_date,
+                                            '00_file_name': file_name,
+                                            '00_sheet_name': sheet_name,
+                                        },
+                                        **row.astype(str).to_dict(),
+                                    })
 
                     except Exception as e:
                         # Log error but continue processing other sheets

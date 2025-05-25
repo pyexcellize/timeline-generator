@@ -21,7 +21,6 @@ async def get_row_timeline(row_pk: str):
         rows = Excel.get_rows_by_row_pk(row_pk)
 
         return {
-            "row_pk": row_pk,
             "matches": rows
         }
 
