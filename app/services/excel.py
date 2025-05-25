@@ -67,11 +67,11 @@ class Excel:
                                         'metadata': {
                                             'parsed_date': 'None'
                                         },
-                                        'row': row.astype(str).to_dict(),
+                                        'raw': row.astype(str).to_dict(),
                                     })
 
                                 output.append({
-                                    'matches': matches_in_sheet,
+                                    'rows': matches_in_sheet,
                                     'file_name': file_name,
                                     'sheet_name': sheet_name,
                                 })
