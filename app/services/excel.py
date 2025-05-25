@@ -25,7 +25,7 @@ class Excel:
             try:
                 file_start_time = time.time()
                 # Load the Excel file and store it in cache
-                excel_file = pd.ExcelFile(file_path)
+                excel_file = pd.ExcelFile(file_path, engine="calamine")
                 file_name = os.path.basename(file_path)
                 
                 # Cache both the ExcelFile object and pre-loaded DataFrames for each sheet
@@ -127,7 +127,8 @@ class Excel:
 
                                     # Parse date in YYYYMMDD format
                                     if len(date_value) == 8:
-                                        date_obj = datetime.strptime(date_value, Config.DATE_FORMAT)
+                                        # Use '%Y%m%d' format for digit-only string
+                                        date_obj = datetime.strptime(date_value, '%Y%m%d')
                                         parsed_date = date_obj.strftime('%Y-%m-%d')
                                 except Exception as date_error:
                                     print(f"Error parsing date {row[found_date_key]}: {str(date_error)}")
@@ -156,11 +157,12 @@ class Excel:
 
                                         # Parse date in YYYYMMDD format
                                         if len(date_value) == 8:
-                                            date_obj = datetime.strptime(date_value, Config.DATE_FORMAT)
+                                            # Use '%Y%m%d' format for digit-only string
+                                            date_obj = datetime.strptime(date_value, '%Y%m%d')
                                             parsed_date = date_obj.strftime('%Y-%m-%d')
                                     except Exception as date_error:
                                         print(f"Error parsing date {row[found_date_key]}: {str(date_error)}")
-                                        parsed_date = 'Error parsing date'
+                                        parsed_date = f"Error parsing date {row[found_date_key]}: {str(date_error)}"
 
                                 output.append({
                                     **{
