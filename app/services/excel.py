@@ -2,7 +2,7 @@ import os
 import time
 import pandas as pd
 from datetime import datetime
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 
 from pandas import DataFrame
 
@@ -95,6 +95,80 @@ class Excel:
                     excel_files.append(os.path.join(root, file))
 
         return excel_files
+    
+    @staticmethod
+    def parse_date(date_value: Any) -> str:
+        """
+        Parse date values from various formats into a consistent output format.
+        
+        Args:
+            date_value: The date value to parse (could be string, int, datetime, etc.)
+            
+        Returns:
+            Formatted date string or error message
+        """
+        if date_value is None:
+            return 'None'
+        
+        try:
+            # Convert to string first
+            date_str = str(date_value).strip()
+            
+            # Return None for empty strings
+            if not date_str or date_str.lower() in ('none', 'nan', 'nat'):
+                return 'None'
+            
+            # Handle pandas Timestamp objects
+            if isinstance(date_value, pd.Timestamp):
+                return date_value.strftime(Config.DATE_FORMAT)
+            
+            # Handle Python datetime objects
+            if isinstance(date_value, datetime):
+                return date_value.strftime(Config.DATE_FORMAT)
+                
+            # Try to extract numeric part for numeric dates
+            digits_only = ''.join(filter(str.isdigit, date_str))
+            
+            # Common date formats to try
+            if len(digits_only) == 8:  # YYYYMMDD
+                return datetime.strptime(digits_only, '%Y%m%d').strftime(Config.DATE_FORMAT)
+            
+            # Try various date formats in order
+            formats_to_try = [
+                '%Y-%m-%d',           # 2023-01-15
+                '%d/%m/%Y',           # 15/01/2023
+                '%m/%d/%Y',           # 01/15/2023
+                '%Y/%m/%d',           # 2023/01/15
+                '%d-%m-%Y',           # 15-01-2023
+                '%m-%d-%Y',           # 01-15-2023
+                '%Y%m%d',             # 20230115
+                '%d.%m.%Y',           # 15.01.2023
+                '%Y.%m.%d',           # 2023.01.15
+                '%d %b %Y',           # 15 Jan 2023
+                '%d %B %Y',           # 15 January 2023
+                '%b %d, %Y',          # Jan 15, 2023
+                '%B %d, %Y'           # January 15, 2023
+            ]
+            
+            for fmt in formats_to_try:
+                try:
+                    date_obj = datetime.strptime(date_str, fmt)
+                    return date_obj.strftime(Config.DATE_FORMAT)
+                except ValueError:
+                    continue
+                    
+            # If all direct parsing attempts fail but we have 8 digits, try that
+            if len(digits_only) == 8:
+                try:
+                    date_obj = datetime.strptime(digits_only, '%Y%m%d')
+                    return date_obj.strftime(Config.DATE_FORMAT)
+                except ValueError:
+                    pass
+                    
+            return f"Unparseable date: {date_str}"
+            
+        except Exception as e:
+            return f"Error parsing date: {str(e)}"
 
     @classmethod
     def get_rows_by_row_pk(cls, row_pk: str) -> Any:
@@ -136,19 +210,7 @@ class Excel:
                             # Parse date if date column exists
                             parsed_date = 'None'
                             if found_date_key and found_date_key in row:
-                                try:
-                                    date_value = str(row[found_date_key])
-                                    # Clean the date string (removing any non-numeric characters)
-                                    date_value = ''.join(filter(str.isdigit, date_value))
-
-                                    # Parse date in YYYYMMDD format
-                                    if len(date_value) == 8:
-                                        # Use '%Y%m%d' format for digit-only string
-                                        date_obj = datetime.strptime(date_value, '%Y%m%d')
-                                        parsed_date = date_obj.strftime('%Y-%m-%d')
-                                except Exception as date_error:
-                                    print(f"Error parsing date {row[found_date_key]}: {str(date_error)}")
-                                    parsed_date = 'Error parsing date'
+                                parsed_date = cls.parse_date(row[found_date_key])
 
                             output.append({
                                 **{
@@ -166,19 +228,7 @@ class Excel:
                                 # Parse date if date column exists
                                 parsed_date = 'None'
                                 if found_date_key and found_date_key in row:
-                                    try:
-                                        date_value = str(row[found_date_key])
-                                        # Clean the date string (removing any non-numeric characters)
-                                        date_value = ''.join(filter(str.isdigit, date_value))
-
-                                        # Parse date in YYYYMMDD format
-                                        if len(date_value) == 8:
-                                            # Use '%Y%m%d' format for digit-only string
-                                            date_obj = datetime.strptime(date_value, '%Y%m%d')
-                                            parsed_date = date_obj.strftime('%Y-%m-%d')
-                                    except Exception as date_error:
-                                        print(f"Error parsing date {row[found_date_key]}: {str(date_error)}")
-                                        parsed_date = f"Error parsing date {row[found_date_key]}: {str(date_error)}"
+                                    parsed_date = cls.parse_date(row[found_date_key])
 
                                 output.append({
                                     **{
