@@ -20,8 +20,23 @@ async def get_row_timeline(row_pk: str):
         # Get data from Excel service
         rows = Excel.get_rows_by_row_pk(row_pk)
 
+        grouped_rows = {}
+        for row in rows:
+            date_key = row.get("00_parsed_date")
+            file_name = row.get("00_file_name")
+            sheet_name = row.get("00_sheet_name")
+
+            if date_key not in grouped_rows:
+                grouped_rows[date_key] = {}
+            if file_name not in grouped_rows[date_key]:
+                grouped_rows[date_key][file_name] = {}
+            if sheet_name not in grouped_rows[date_key][file_name]:
+                grouped_rows[date_key][file_name][sheet_name] = []
+
+            grouped_rows[date_key][file_name][sheet_name].append(row)
+
         return {
-            "matches": rows
+            "matches": grouped_rows
         }
 
     except Exception as e:
