@@ -1,4 +1,5 @@
 import os
+import time
 import pandas as pd
 from datetime import datetime
 from typing import List, Dict, Any, Union
@@ -15,10 +16,12 @@ class Excel:
     @classmethod
     def initialize_cache(cls):
         """Initialize the Excel file cache"""
+        start_time = time.time()
         cls._excel_cache = {}
         excel_files = cls.find_all_excel_files()
         for file_path in excel_files:
             try:
+                file_start_time = time.time()
                 # Load the Excel file and store it in cache
                 excel_file = pd.ExcelFile(file_path)
                 file_name = os.path.basename(file_path)
@@ -33,21 +36,31 @@ class Excel:
                 # Pre-load all sheets
                 for sheet_name in excel_file.sheet_names:
                     try:
+                        sheet_start_time = time.time()
                         sheet_df = pd.read_excel(excel_file, sheet_name=sheet_name, index_col=0)
                         cls._excel_cache[file_path]['sheets'][sheet_name] = sheet_df
+                        sheet_load_time = time.time() - sheet_start_time
+                        print(f"Sheet '{sheet_name}' in '{file_name}' loaded in {sheet_load_time:.3f} seconds")
                     except Exception as e:
                         print(f"Error pre-loading sheet {sheet_name} in file {file_path}: {str(e)}")
                         continue
+                
+                file_load_time = time.time() - file_start_time
+                print(f"File '{file_name}' loaded in {file_load_time:.3f} seconds with {len(excel_file.sheet_names)} sheets")
                         
             except Exception as e:
                 print(f"Error loading file {file_path} into cache: {str(e)}")
                 continue
-                
-        print(f"Excel cache initialized with {len(cls._excel_cache)} files")
+        
+        total_time = time.time() - start_time
+        total_files = len(cls._excel_cache)
+        total_sheets = sum(len(file_data['sheets']) for file_data in cls._excel_cache.values())
+        print(f"Excel cache initialized with {total_files} files and {total_sheets} sheets in {total_time:.3f} seconds")
     
     @classmethod
     def refresh_cache(cls):
         """Refresh the Excel file cache"""
+        print("Refreshing Excel cache...")
         cls.initialize_cache()
     
     @staticmethod
@@ -67,18 +80,26 @@ class Excel:
 
     @classmethod
     def get_rows_by_row_pk(cls, row_pk: str) -> Any:
+        lookup_start_time = time.time()
         output = []
         
         # Initialize cache if empty
         if not cls._excel_cache:
+            print("Excel cache was empty. Initializing...")
             cls.initialize_cache()
 
         # Use the cached Excel files instead of opening them again
+        files_checked = 0
+        sheets_checked = 0
+        matches_found = 0
+        
         for file_path, cached_data in cls._excel_cache.items():
+            files_checked += 1
             file_name = cached_data['file_name']
             
             # Process each cached sheet
             for sheet_name, sheet_df in cached_data['sheets'].items():
+                sheets_checked += 1
                 try:
                     found_date_key = None
                     for date_key in Config.DATE_COLUMNS:
@@ -92,6 +113,7 @@ class Excel:
                         
                         # Handle both Series (single row) and DataFrame (multiple rows)
                         if isinstance(matches_in_sheet_df, pd.Series):
+                            matches_found += 1
                             row = matches_in_sheet_df
                             # Parse date if date column exists
                             parsed_date = 'None'
@@ -119,6 +141,8 @@ class Excel:
                             })
                         else:
                             # Handle DataFrame (multiple rows)
+                            row_count = len(matches_in_sheet_df)
+                            matches_found += row_count
                             for _, row in matches_in_sheet_df.iterrows():
                                 # Parse date if date column exists
                                 parsed_date = 'None'
@@ -149,8 +173,15 @@ class Excel:
                     # Log error but continue processing other sheets
                     print(f"Error processing sheet {sheet_name} in file {file_path}: {str(e)}")
                     continue
+        
+        lookup_time = time.time() - lookup_start_time
+        print(f"Lookup for row_pk '{row_pk}' completed in {lookup_time:.3f} seconds")
+        print(f"Checked {files_checked} files and {sheets_checked} sheets, found {matches_found} matches")
 
         return output
 
 # Initialize the Excel cache when the module is loaded
+init_start_time = time.time()
 Excel.initialize_cache()
+init_time = time.time() - init_start_time
+print(f"Initial Excel cache loaded in {init_time:.3f} seconds")
