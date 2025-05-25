@@ -54,7 +54,7 @@ class SimpleTimelineItem {
         // Create expandable sections for each file
         for (const fileName in fileData) {
             const fileCard = document.createElement('div');
-            fileCard.className = 'card mb-2';
+            fileCard.className = 'card mb-3';
             
             const fileHeader = document.createElement('div');
             fileHeader.className = 'card-header d-flex justify-content-between align-items-center';
@@ -62,7 +62,7 @@ class SimpleTimelineItem {
                 <h6 class="mb-0">
                     <i class="fas fa-file-excel me-2 text-success"></i>${fileName}
                 </h6>
-                <span class="badge bg-info">${this.countTotalRows(fileData[fileName])} rows</span>
+                <span class="badge bg-info">${this.countTotalRows({[fileName]: fileData[fileName]})} rows</span>
             `;
             
             const fileContent = document.createElement('div');
@@ -71,11 +71,14 @@ class SimpleTimelineItem {
             // Add sheets from this file
             for (const sheetName in fileData[fileName]) {
                 const sheetCard = document.createElement('div');
-                sheetCard.className = 'sheet-data mb-2';
+                sheetCard.className = 'sheet-data mb-3';
                 
                 const sheetHeader = document.createElement('div');
-                sheetHeader.className = 'sheet-header small text-muted';
+                sheetHeader.className = 'sheet-header small text-muted mb-2';
                 sheetHeader.innerHTML = `<i class="fas fa-table me-1"></i>${sheetName}`;
+                
+                const tableContainer = document.createElement('div');
+                tableContainer.className = 'table-responsive';
                 
                 const sheetTable = document.createElement('table');
                 sheetTable.className = 'table table-sm table-bordered';
@@ -113,8 +116,9 @@ class SimpleTimelineItem {
                 });
                 sheetTable.appendChild(tbody);
                 
+                tableContainer.appendChild(sheetTable);
                 sheetCard.appendChild(sheetHeader);
-                sheetCard.appendChild(sheetTable);
+                sheetCard.appendChild(tableContainer);
                 fileContent.appendChild(sheetCard);
             }
             

@@ -23,7 +23,16 @@ def generate_data(num_rows=1000000):
         "adsdaoksndasd": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
         "asddaoksndasd": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
         "asdaodksndasd": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
-        "asdaoksdndasd": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)]
+        "asdaoksdndas2d": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdsndas2d": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdsnd1asd": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdndasdasd": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdnsdasd": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdndas123d": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdndas1d": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdndas3d": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdndas4d": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)],
+        "asdaoksdndasd5": [f"asdaoksndasd-{i % 5}" for i in range(num_rows)]
     }
     df = pd.DataFrame(data)
     df.set_index("appearance_id", inplace=True)
